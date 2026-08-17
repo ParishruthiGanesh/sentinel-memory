@@ -1,0 +1,16 @@
+{
+  "//": "CockroachDB Cloud Managed MCP Server — Claude Code configuration.",
+  "//1": "Copy to .mcp.json in the repository root (git-ignored) and fill in the token.",
+  "//2": "Get a token: CockroachDB Cloud Console -> Access Management -> Service Accounts",
+  "//3": "-> create a service account with READ-ONLY cluster permissions -> create an API key.",
+  "//4": "NEVER commit the filled-in file. .mcp.json is already in .gitignore.",
+  "mcpServers": {
+    "cockroachdb": {
+      "type": "http",
+      "url": "https://cockroachlabs.cloud/mcp",
+      "headers": {
+        "Authorization": "Bearer ${COCKROACH_CLOUD_API_KEY}"
+      }
+    }
+  }
+}

@@ -1,0 +1,111 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    --font-mono: ui-monospace, 'SFMono-Regular', 'Menlo', 'Consolas', monospace;
+    color-scheme: dark;
+  }
+
+  html {
+    background-color: #07111f;
+  }
+
+  body {
+    @apply bg-base text-ink antialiased;
+    font-feature-settings: 'cv02', 'cv03', 'cv04';
+  }
+
+  ::selection {
+    background-color: rgba(56, 189, 248, 0.28);
+  }
+
+  /* Slim, unobtrusive scrollbars — this is a dense operations dashboard. */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #24364b transparent;
+  }
+  *::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  *::-webkit-scrollbar-thumb {
+    background-color: #24364b;
+    border-radius: 999px;
+    border: 3px solid transparent;
+    background-clip: content-box;
+  }
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  :focus-visible {
+    outline: 2px solid #38bdf8;
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+}
+
+@layer components {
+  .panel {
+    @apply rounded-lg border border-edge bg-panel shadow-panel;
+  }
+
+  .panel-header {
+    @apply flex items-center justify-between gap-3 border-b border-edge px-4 py-3;
+  }
+
+  .panel-title {
+    @apply text-[11px] font-semibold uppercase tracking-[0.14em] text-muted;
+  }
+
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-[11px] font-medium;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-md border px-3 py-2 text-sm font-medium
+           transition-colors disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn-primary {
+    @apply btn border-success/40 bg-success/15 text-success hover:bg-success/25;
+  }
+
+  .btn-neutral {
+    @apply btn border-edge bg-panel2 text-ink hover:border-info/50 hover:bg-panel2/70;
+  }
+
+  .btn-danger {
+    @apply btn border-critical/40 bg-critical/10 text-critical hover:bg-critical/20;
+  }
+
+  .btn-ghost {
+    @apply btn border-transparent bg-transparent text-muted hover:bg-panel2 hover:text-ink;
+  }
+
+  .field {
+    @apply w-full rounded-md border border-edge bg-base px-3 py-2 text-sm text-ink
+           placeholder:text-muted/60 focus:border-info/60 focus:outline-none;
+  }
+
+  .mono-id {
+    @apply font-mono text-[11px] text-muted;
+  }
+
+  .rule {
+    @apply border-t border-edge;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
