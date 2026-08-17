@@ -1,0 +1,24 @@
+{
+  "//": "CockroachDB Cloud Managed MCP Server — VS Code / Cursor configuration.",
+  "//1": "VS Code: copy to .vscode/mcp.json.  Cursor: copy to .cursor/mcp.json.",
+  "//2": "Both paths are git-ignored in this repository.",
+  "//3": "The `inputs` block makes the editor prompt for the token instead of",
+  "//4": "storing it in the file. Prefer that over pasting a literal token.",
+  "inputs": [
+    {
+      "type": "promptString",
+      "id": "cockroach-cloud-api-key",
+      "description": "CockroachDB Cloud service-account API key (read-only)",
+      "password": true
+    }
+  ],
+  "servers": {
+    "cockroachdb": {
+      "type": "http",
+      "url": "https://cockroachlabs.cloud/mcp",
+      "headers": {
+        "Authorization": "Bearer ${input:cockroach-cloud-api-key}"
+      }
+    }
+  }
+}
