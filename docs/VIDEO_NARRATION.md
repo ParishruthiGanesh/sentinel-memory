@@ -212,6 +212,7 @@ Useful flags:
 | `--width` / `--height` | Viewport, default 1600×1000 |
 | `--executable-path <path>` | Use an existing Chrome instead of Playwright's download |
 | `--skip-health-check` | Record even in degraded mode |
+| `--captions` | Burn the narration in as on-screen captions |
 
 It prints a timestamp for each section as it records, so you can check the beats
 line up with this script before you commit to a voice take. A clean run lands at
@@ -219,3 +220,16 @@ about **2:41**.
 
 Then drop the `.webm` into any editor, record the narration above over it, and
 export. Reset between takes with `npm run db:reset`.
+
+### No time to record audio?
+
+```bash
+npm run record:demo -- --base-url https://your-app.vercel.app --captions
+```
+
+`--captions` burns this script in as timed on-screen captions, so the silent
+recording explains itself and is submittable as-is. A voice track is still
+better — judges watch a lot of these and a human voice carries conviction that
+text does not — but a captioned video beats no video, and beats a video whose
+point nobody can follow. If you do record voice, leave `--captions` on anyway:
+they double as accessibility subtitles.

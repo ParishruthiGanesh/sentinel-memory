@@ -43,6 +43,10 @@ const SKIP_HEALTH = process.argv.includes('--skip-health-check');
 // managed download (useful in locked-down environments, or to record in the
 // exact browser you already have installed).
 const EXECUTABLE_PATH = arg('executable-path', process.env.CHROME_PATH);
+// Burn the narration in as on-screen captions. Makes the silent recording
+// self-explanatory, so it is submittable as-is if there is no time to record a
+// voice track — and doubles as accessibility subtitles if there is.
+const CAPTIONS = process.argv.includes('--captions');
 
 // ---------------------------------------------------------------------------
 // pre-flight: refuse to silently record a fallback-mode demo
@@ -197,10 +201,46 @@ async function record() {
     });
   });
 
+  // Caption bar. Re-created on demand because a navigation wipes the DOM.
+  const caption = async (text, holdMs = 0) => {
+    if (CAPTIONS) {
+      await page.evaluate((value) => {
+        let bar = document.getElementById('__caption');
+        if (!bar) {
+          bar = document.createElement('div');
+          bar.id = '__caption';
+          bar.style.cssText = [
+            'position:fixed', 'left:50%', 'bottom:16px', 'transform:translateX(-50%)',
+            'max-width:1100px', 'z-index:2147483646', 'pointer-events:none',
+            'padding:11px 24px', 'border-radius:9px',
+            'background:rgba(7,17,31,.93)', 'border:1px solid rgba(36,54,75,.9)',
+            'box-shadow:0 8px 32px rgba(0,0,0,.55)',
+            'color:#F4F7FA', 'font:500 21px/1.35 ui-sans-serif,system-ui,sans-serif',
+            'text-align:center', 'letter-spacing:.1px',
+            'opacity:0', 'transition:opacity .28s ease',
+          ].join(';');
+          document.body.appendChild(bar);
+        }
+        if (!value) {
+          bar.style.opacity = '0';
+          return;
+        }
+        bar.style.opacity = '0';
+        setTimeout(() => {
+          bar.textContent = value;
+          bar.style.opacity = '1';
+        }, 140);
+      }, text);
+    }
+    if (holdMs) await page.waitForTimeout(holdMs);
+  };
+
   const started = Date.now();
   const mark = (label) => {
-    const seconds = (Date.now() - started) / 1000;
-    const stamp = `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${(seconds % 60).toFixed(0).padStart(2, '0')}`;
+    const total = Math.round((Date.now() - started) / 1000);
+    const stamp =
+      `${String(Math.floor(total / 60)).padStart(2, '0')}:` +
+      `${String(total % 60).padStart(2, '0')}`;
     console.log(`  ${stamp}  ${label}`);
   };
   const wait = (ms) => page.waitForTimeout(ms);
@@ -239,83 +279,94 @@ async function record() {
   await wait(3500);
   mark('the problem — hold on the incident header');
   await glideScroll(120, 1200);
-  await wait(15000);
+  await caption('During an industrial emergency, the people change faster than the situation does.', 5000);
+  await caption('Shifts rotate. Responders hand over. Agent processes restart.', 4500);
+  await caption("What gets lost isn't the incident description — it's the consequence of what was already tried.", 5500);
 
   // -- 0:20 the live incident ---------------------------------------------
   mark('the live incident — observation feed');
   await glideScroll(0, 900);
-  await wait(3000);
+  await caption('Incident INC-2026-0817 — smoke near Machine 7. Critical, in containment.', 2600);
   await glideTo(page.locator('text=/Pressure reading increasing/').first());
-  await wait(4000);
+  await caption('Pressure is rising on the Machine 8 header.', 3600);
   await glideTo(page.locator('text=/Main power to the Zone 4 cell/').first());
-  await wait(4000);
+  await caption('Main power is still live.', 3600);
   await glideTo(page.locator('header select').first());
-  await wait(6000);
+  await caption('Every observation is a durable row in CockroachDB — not a message in a context window.', 5600);
 
   // -- 0:45 retrieval ------------------------------------------------------
   mark('retrieval — propose the risky action');
   await glideScroll(320, 900);
+  await caption("Here's the reasonable thing to do: restart Machine 7 to clear the fault.", 1800);
   await clickIt(page.getByRole('button', { name: /Check a proposed action against memory/i }));
+  await caption("Sentinel embeds that proposal and searches CockroachDB's distributed vector index.", 0);
   await page.waitForSelector('text=/Approve safer action/i', { timeout: 60000 });
   await wait(2500);
   await glideScroll(0, 1000);
-  await wait(4000);
+  await wait(3200);
   mark('retrieval telemetry');
   await glideTo(page.locator('text=/memories searched/').first());
-  await wait(6000);
+  await caption('Eighteen memories searched, in milliseconds.', 5200);
   await glideScroll(560, 1300);
-  await wait(7000);
+  await caption('Each row carries the action taken, the outcome it produced, and the lesson recorded.', 6400);
   await glideScroll(0, 1100);
-  await wait(3000);
+  await caption('That is the difference between remembering a conversation and remembering a consequence.', 3200);
 
   // -- 1:15 counterfactual + approval -------------------------------------
   mark('counterfactual card');
   await glideTo(page.locator('text=/What happened last time/').first());
-  await wait(9000);
+  await caption('The closest match: INC-2025-0412. Same machine, same situation.', 3200);
+  await caption('Someone restarted Machine 7 before isolating the shared pressure line.', 3000);
+  await caption('Pressure transferred to Machine 8. Secondary valve destroyed. Eleven-hour shutdown.', 3200);
   mark('approve');
+  await caption('So Sentinel recommends the safer sequence instead — and cites the memory it came from.', 1200);
   await clickIt(page.getByRole('button', { name: /Approve safer action/i }));
-  await wait(2500);
+  await caption('A human approves. Sentinel never touches the machine — a person does.', 2500);
   await clickIt(page.getByRole('button', { name: /Approve as authorized responder/i }));
-  await wait(6000);
+  await caption('Decision, recommendation status, incident state and audit event — one CockroachDB transaction.', 6000);
 
   // -- 1:40 handoff --------------------------------------------------------
   mark('handoff');
   await clickIt(page.getByRole('link', { name: /Agent Handoff/i }));
   await page.waitForSelector('text=/Backup agent/i', { timeout: 30000 });
-  await wait(3000);
+  await caption('Now the part that usually breaks everything.', 2800);
   await clickIt(page.getByRole('button', { name: /Simulate Primary Agent Disconnect/i }));
-  await wait(4000);
+  await caption('The primary agent is gone. The backup has zero context.', 3800);
   await clickIt(page.getByRole('button', { name: /Transfer to Backup Agent/i }));
+  await caption('Except the incident was never stored in the agent.', 0);
   await page.waitForSelector('text=/Continuity verified/i', { timeout: 90000 });
-  await wait(4000);
+  await wait(3800);
   mark('continuity briefing');
   await glideScroll(420, 1500);
-  await wait(7000);
+  await caption('Sentinel rebuilds it from CockroachDB: what happened, what was attempted...', 6600);
   await glideScroll(900, 1500);
-  await wait(5000);
+  await caption('...what must not be repeated, current risks, and the next step.', 4800);
 
   // -- 2:05 the receipts ---------------------------------------------------
   mark('timeline');
   await clickIt(page.getByRole('link', { name: /Incident Timeline/i }));
   await page.waitForSelector('text=/Event stream/i', { timeout: 30000 });
-  await wait(2500);
+  await caption('Every step is auditable — retrieval, warning, recommendation, approval, handoff.', 2200);
   await glideScroll(500, 2000);
-  await wait(4000);
+  await wait(3600);
   await glideScroll(1100, 2000);
-  await wait(4000);
+  await caption('All reconstructed from durable memory events in CockroachDB.', 3600);
   mark('memory explorer');
   await clickIt(page.getByRole('link', { name: /Memory Explorer/i }));
   await wait(3500);
   await glideScroll(260, 1200);
-  await wait(7000);
+  await caption('The same retrieval is searchable directly — similarity, latency, and which index served it.', 6600);
 
   // -- 2:30 close ----------------------------------------------------------
   mark('close on the counterfactual');
   await clickIt(page.getByRole('link', { name: /Command Center/i }));
   await page.waitForSelector('text=/What happened last time/i', { timeout: 30000 });
-  await wait(1500);
+  await wait(1200);
   await glideScroll(120, 900);
-  await wait(9000);
+  await caption('CockroachDB is the system of record. Amazon Bedrock reasons over what memory returns.', 4200);
+  await caption('Normal agents remember conversations.', 2600);
+  await caption('Sentinel remembers consequences.', 4200);
+  await caption('', 600);
 
   mark('done');
   await context.close(); // finalizes the video file
