@@ -178,3 +178,44 @@ Normal agents remember conversations.
 - [ ] No credentials visible in any frame (check the browser URL bar and any
       terminal you show)
 - [ ] Video URL pasted into the Devpost submission
+
+---
+
+## Recording it automatically (recommended)
+
+Hand-recording means mouse wobble, missed clicks and dead air while you hunt for
+a button. `scripts/record-demo.mjs` drives the whole demo through a real browser
+with the pacing above and writes a silent video you narrate over.
+
+```bash
+npm i -D playwright && npx playwright install chromium
+
+# against your deployed app
+npm run record:demo -- --base-url https://your-app.vercel.app
+
+# or against a local production build
+npm run build && npm start
+npm run record:demo
+```
+
+It runs a **pre-flight `/api/health` check and refuses to record** if
+CockroachDB or Bedrock is not connected — because a degraded-mode banner in
+every frame is the single worst thing that can happen to this submission. Add
+`--skip-health-check` to override (e.g. for a plain UI walkthrough).
+
+Useful flags:
+
+| Flag | Purpose |
+| --- | --- |
+| `--base-url <url>` | Target app (default `http://localhost:3000`) |
+| `--out <dir>` | Output directory (default `./demo-recording`) |
+| `--width` / `--height` | Viewport, default 1600×1000 |
+| `--executable-path <path>` | Use an existing Chrome instead of Playwright's download |
+| `--skip-health-check` | Record even in degraded mode |
+
+It prints a timestamp for each section as it records, so you can check the beats
+line up with this script before you commit to a voice take. A clean run lands at
+about **2:41**.
+
+Then drop the `.webm` into any editor, record the narration above over it, and
+export. Reset between takes with `npm run db:reset`.
