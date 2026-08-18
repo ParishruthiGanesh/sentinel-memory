@@ -73,7 +73,46 @@ async function preflight() {
       process.exit(1);
     }
 
-    health = await response.json();
+    // Vercel's Deployment Protection challenge is served as an HTML page with a
+    // 2xx status, so a status check alone does not catch it. If we asked for
+    // JSON and got a document, say so precisely instead of failing on a JSON
+    // parse error that points at the wrong problem.
+    const body = await response.text();
+    const looksLikeHtml = /^\s*<(!doctype|html)/i.test(body);
+
+    if (looksLikeHtml) {
+      const vercelSso =
+        /_vercel\/sso|vercel\.com\/sso|Authentication Required|sso-api/i.test(body);
+
+      console.error(`\n  ${BASE}/api/health returned an HTML page, not JSON.`);
+      console.error('');
+      if (vercelSso) {
+        console.error('  It is Vercel\'s Deployment Protection login page.');
+        console.error('  The URL works in the browser you are signed into, and is');
+        console.error('  invisible to everyone else — including judges, and this script.');
+      } else {
+        console.error('  Something other than the Sentinel API is answering that path.');
+        console.error('  Most often this is Deployment Protection, or a deployment built');
+        console.error('  from a branch that does not contain the app.');
+      }
+      console.error('');
+      console.error('  Fix Deployment Protection:');
+      console.error('    Vercel -> your project -> Settings -> Deployment Protection');
+      console.error('    -> Vercel Authentication -> Disabled  (Save)');
+      console.error('');
+      console.error('  Then verify in a private/incognito window:');
+      console.error(`    ${BASE}/api/health`);
+      console.error('  You should see JSON starting with {"status":...\n');
+      process.exit(1);
+    }
+
+    try {
+      health = JSON.parse(body);
+    } catch {
+      console.error(`\n  ${BASE}/api/health did not return valid JSON.`);
+      console.error(`  First bytes: ${body.slice(0, 120).replace(/\s+/g, ' ')}\n`);
+      process.exit(1);
+    }
   } catch (error) {
     console.error(`\n  Could not reach ${BASE}/api/health`);
     console.error(`  ${error.message}`);
