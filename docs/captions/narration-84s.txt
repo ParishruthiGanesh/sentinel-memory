@@ -1,0 +1,19 @@
+In an emergency, the people change faster than the situation does. Shifts rotate, responders hand over, agents restart. What gets lost isn't the incident description. It's the consequence of what was already tried.
+
+This is Sentinel Memory. Smoke near Machine 7. Critical. Every observation here is a durable row in CockroachDB.
+
+The obvious move is to restart Machine 7 to clear the fault. Sentinel embeds that proposal and searches CockroachDB's distributed vector index.
+
+The closest match is the same restart, done before isolation. It transferred pressure to Machine 8 and cost eleven hours.
+
+So Sentinel recommends the safer sequence: isolate and verify first, citing the memories it used. A human approves. Sentinel never touches the machine.
+
+Now the part that usually breaks everything. The primary agent goes down and the backup starts with zero context. Except the incident was never stored in the agent.
+
+Every step is auditable, reconstructed from durable memory events in CockroachDB. The same retrieval is searchable directly: similarity scores, latency, and which index served it.
+
+The backup rebuilds its briefing from the database. What happened, what was attempted, what must not be repeated.
+
+CockroachDB is the system of record. Amazon Bedrock reasons over what that memory returns.
+
+Normal agents remember conversations. Sentinel remembers consequences.
