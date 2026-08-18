@@ -268,7 +268,8 @@ async function record() {
           const p = Math.min(1, (t - t0) / duration);
           const eased = p < 0.5 ? 2 * p * p : 1 - (-2 * p + 2) ** 2 / 2;
           main.scrollTop = start + delta * eased;
-          p < 1 ? requestAnimationFrame(step) : done();
+          if (p < 1) requestAnimationFrame(step);
+          else done();
         };
         requestAnimationFrame(step);
       });
