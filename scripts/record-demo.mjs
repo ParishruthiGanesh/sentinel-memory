@@ -53,9 +53,33 @@ async function preflight() {
   let health;
   try {
     const response = await fetch(`${BASE}/api/health`);
+
+    // A 401/403 here almost always means Vercel Deployment Protection is on:
+    // the URL opens fine in the browser you are logged into, and is invisible
+    // to everyone else — including this script, and including a judge.
+    if (response.status === 401 || response.status === 403) {
+      console.error(`\n  ${BASE}/api/health returned ${response.status}.`);
+      console.error('  That usually means Vercel Deployment Protection is enabled.');
+      console.error('  The URL works in your logged-in browser but is private to everyone else.');
+      console.error('');
+      console.error('  Fix: Vercel -> Project -> Settings -> Deployment Protection');
+      console.error('       -> set Vercel Authentication to Disabled for Production.');
+      console.error('  Then confirm in a private/incognito window before recording.\n');
+      process.exit(1);
+    }
+    if (!response.ok) {
+      console.error(`\n  ${BASE}/api/health returned HTTP ${response.status}.`);
+      console.error('  Is the app deployed and running at that URL?\n');
+      process.exit(1);
+    }
+
     health = await response.json();
   } catch (error) {
-    console.error(`\n  Could not reach ${BASE}/api/health — is the app running?\n  ${error.message}\n`);
+    console.error(`\n  Could not reach ${BASE}/api/health`);
+    console.error(`  ${error.message}`);
+    console.error('');
+    console.error('  Check the URL is correct and publicly reachable. If you are');
+    console.error('  recording a local build, start it first: npm run build && npm start\n');
     process.exit(1);
   }
 
