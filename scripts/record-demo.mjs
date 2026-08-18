@@ -22,7 +22,7 @@
  * DaVinci Resolve, CapCut, Descript).
  */
 
-import { mkdirSync, existsSync, readdirSync, renameSync } from 'node:fs';
+import { mkdirSync, existsSync, readdirSync, renameSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
 // ---------------------------------------------------------------------------
@@ -201,8 +201,21 @@ async function record() {
     });
   });
 
+  // Subtitle cues, timed from real elapsed time rather than the nominal script.
+  // This is what makes the .srt line up even when a slow Bedrock call shifts a
+  // section by a second or two.
+  const cues = [];
+  const closeCue = (atMs) => {
+    const open = cues[cues.length - 1];
+    if (open && open.end === undefined) open.end = atMs;
+  };
+
   // Caption bar. Re-created on demand because a navigation wipes the DOM.
   const caption = async (text, holdMs = 0) => {
+    const now = Date.now() - started;
+    closeCue(now);
+    if (text) cues.push({ text, start: now, end: undefined });
+
     if (CAPTIONS) {
       await page.evaluate((value) => {
         let bar = document.getElementById('__caption');
@@ -370,8 +383,12 @@ async function record() {
   await caption('', 600);
 
   mark('done');
+  closeCue(Date.now() - started);
+
   await context.close(); // finalizes the video file
   await browser.close();
+
+  writeSubtitles(cues);
 
   const file = readdirSync(OUT).find((name) => name.endsWith('.webm'));
   if (file) {
@@ -381,6 +398,59 @@ async function record() {
     console.log('  Silent by design — add narration from docs/VIDEO_NARRATION.md.');
     console.log('  YouTube and Vimeo both accept .webm directly.\n');
   }
+}
+
+/** SRT/WebVTT timestamp: 00:01:23,456 (SRT) or 00:01:23.456 (VTT). */
+function stamp(ms, separator) {
+  const total = Math.max(0, Math.round(ms));
+  const hh = String(Math.floor(total / 3600000)).padStart(2, '0');
+  const mm = String(Math.floor((total % 3600000) / 60000)).padStart(2, '0');
+  const ss = String(Math.floor((total % 60000) / 1000)).padStart(2, '0');
+  const mmm = String(total % 1000).padStart(3, '0');
+  return `${hh}:${mm}:${ss}${separator}${mmm}`;
+}
+
+/**
+ * Write subtitle files next to the video.
+ *
+ * Emitted whether or not --captions burned them into the picture: an .srt can
+ * be uploaded to YouTube as a caption track, which is better than burnt-in text
+ * because viewers can turn it off and search engines can read it.
+ */
+function writeSubtitles(cues) {
+  const closed = cues
+    .filter((cue) => cue.text)
+    .map((cue, index, all) => ({
+      ...cue,
+      // Never let a cue outlive the next one, and give the last one a tail.
+      end: Math.min(cue.end ?? cue.start + 4000, all[index + 1]?.start ?? Infinity),
+    }))
+    .filter((cue) => cue.end > cue.start);
+
+  if (closed.length === 0) return;
+
+  const srt = closed
+    .map(
+      (cue, index) =>
+        `${index + 1}\n${stamp(cue.start, ',')} --> ${stamp(cue.end, ',')}\n${cue.text}\n`,
+    )
+    .join('\n');
+
+  const vtt =
+    'WEBVTT\n\n' +
+    closed
+      .map((cue) => `${stamp(cue.start, '.')} --> ${stamp(cue.end, '.')}\n${cue.text}\n`)
+      .join('\n');
+
+  const srtPath = join(OUT, 'sentinel-memory-demo.srt');
+  const vttPath = join(OUT, 'sentinel-memory-demo.vtt');
+  writeFileSync(srtPath, srt, 'utf8');
+  writeFileSync(vttPath, vtt, 'utf8');
+
+  console.log(`  Subtitles: ${srtPath}`);
+  console.log(`             ${vttPath}`);
+  console.log(`  ${closed.length} cues, timed from this run.`);
+  console.log('  Upload the .srt to YouTube: Subtitles -> Add -> Upload file.\n');
 }
 
 await preflight();

@@ -1,0 +1,115 @@
+1
+00:00:05,000 --> 00:00:10,000
+During an industrial emergency, the people change faster than the situation does.
+
+2
+00:00:10,000 --> 00:00:14,500
+Shifts rotate. Responders hand over. Agent processes restart.
+
+3
+00:00:14,500 --> 00:00:20,000
+What gets lost isn't the incident description - it's the consequence of what was already tried.
+
+4
+00:00:22,000 --> 00:00:24,600
+Incident INC-2026-0817 - smoke near Machine 7. Critical, in containment.
+
+5
+00:00:25,000 --> 00:00:28,600
+Pressure is rising on the Machine 8 header.
+
+6
+00:00:29,000 --> 00:00:32,600
+Main power is still live.
+
+7
+00:00:33,000 --> 00:00:38,600
+Every observation is a durable row in CockroachDB - not a message in a context window.
+
+8
+00:00:41,000 --> 00:00:42,800
+Here's the reasonable thing to do: restart Machine 7 to clear the fault.
+
+9
+00:00:43,000 --> 00:00:50,000
+Sentinel embeds that proposal and searches CockroachDB's distributed vector index.
+
+10
+00:00:51,000 --> 00:00:56,200
+Eighteen memories searched, in milliseconds.
+
+11
+00:00:57,000 --> 00:01:03,400
+Each row carries the action taken, the outcome it produced, and the lesson recorded.
+
+12
+00:01:04,500 --> 00:01:08,000
+That is the difference between remembering a conversation and remembering a consequence.
+
+13
+00:01:09,000 --> 00:01:12,200
+The closest match: INC-2025-0412. Same machine, same situation.
+
+14
+00:01:12,200 --> 00:01:15,200
+Someone restarted Machine 7 before isolating the shared pressure line.
+
+15
+00:01:15,200 --> 00:01:18,800
+Pressure transferred to Machine 8. Secondary valve destroyed. Eleven-hour shutdown.
+
+16
+00:01:19,000 --> 00:01:20,500
+So Sentinel recommends the safer sequence instead - and cites the memory it came from.
+
+17
+00:01:21,000 --> 00:01:24,000
+A human approves. Sentinel never touches the machine - a person does.
+
+18
+00:01:25,000 --> 00:01:31,000
+Decision, recommendation status, incident state and audit event - one CockroachDB transaction.
+
+19
+00:01:33,000 --> 00:01:36,000
+Now the part that usually breaks everything.
+
+20
+00:01:36,500 --> 00:01:40,000
+The primary agent is gone. The backup has zero context.
+
+21
+00:01:40,500 --> 00:01:44,000
+Except the incident was never stored in the agent.
+
+22
+00:01:46,000 --> 00:01:52,500
+Sentinel rebuilds it from CockroachDB: what happened, what was attempted...
+
+23
+00:01:54,000 --> 00:01:59,000
+...what must not be repeated, current risks, and the next step.
+
+24
+00:02:00,000 --> 00:02:03,000
+Every step is auditable - retrieval, warning, recommendation, approval, handoff.
+
+25
+00:02:08,000 --> 00:02:12,000
+All reconstructed from durable memory events in CockroachDB.
+
+26
+00:02:19,000 --> 00:02:26,000
+The same retrieval is searchable directly - similarity, latency, and which index served it.
+
+27
+00:02:29,000 --> 00:02:33,200
+CockroachDB is the system of record. Amazon Bedrock reasons over what memory returns.
+
+28
+00:02:33,500 --> 00:02:36,000
+Normal agents remember conversations.
+
+29
+00:02:36,300 --> 00:02:40,500
+Sentinel remembers consequences.
